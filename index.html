@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>清新待办清单</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-gradient: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.9), rgba(231,247,255,0.8) 45%, rgba(180,220,255,0.6) 100%), linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+      --card-bg: rgba(255, 255, 255, 0.85);
+      --accent: #3b82f6;
+      --accent-soft: rgba(59, 130, 246, 0.15);
+      --text-primary: #1f2933;
+      --text-secondary: #4f5d75;
+      --shadow-soft: 0 20px 40px rgba(91, 137, 255, 0.15);
+      --radius-lg: 24px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Noto Sans SC', 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      background: var(--bg-gradient);
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+
+    .app-shell {
+      width: min(960px, 100%);
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-soft);
+      padding: clamp(24px, 5vw, 48px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .app-shell::before,
+    .app-shell::after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(60px);
+      opacity: 0.35;
+      z-index: 0;
+    }
+
+    .app-shell::before {
+      width: 260px;
+      height: 260px;
+      background: #c4f1f9;
+      top: -120px;
+      right: -80px;
+    }
+
+    .app-shell::after {
+      width: 220px;
+      height: 220px;
+      background: #fcdada;
+      bottom: -100px;
+      left: -60px;
+    }
+
+    header {
+      position: relative;
+      z-index: 1;
+      margin-bottom: clamp(24px, 4vw, 40px);
+    }
+
+    .title {
+      font-size: clamp(32px, 5vw, 48px);
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      color: var(--text-primary);
+    }
+
+    .title span {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.8), rgba(14, 165, 233, 0.6));
+      color: #fff;
+      font-size: 26px;
+    }
+
+    .subtitle {
+      margin-top: 12px;
+      font-size: 18px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .input-area {
+      position: relative;
+      z-index: 1;
+      margin-bottom: 24px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .input-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .input-row input[type="text"] {
+      flex: 1 1 240px;
+      padding: 14px 18px;
+      border-radius: 16px;
+      border: 1px solid transparent;
+      background: rgba(255, 255, 255, 0.85);
+      box-shadow: inset 0 1px 3px rgba(15, 23, 42, 0.08);
+      font-size: 16px;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .input-row input[type="text"]:focus {
+      outline: none;
+      border-color: rgba(59, 130, 246, 0.5);
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    }
+
+    .input-row button {
+      padding: 14px 26px;
+      background: linear-gradient(135deg, #60a5fa, #818cf8);
+      color: white;
+      border: none;
+      border-radius: 16px;
+      font-weight: 600;
+      font-size: 16px;
+      cursor: pointer;
+      box-shadow: 0 12px 20px rgba(96, 165, 250, 0.3);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .input-row button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 24px rgba(96, 165, 250, 0.35);
+    }
+
+    .input-row button:active {
+      transform: translateY(0);
+    }
+
+    .filters {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      background: rgba(255, 255, 255, 0.7);
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+
+    .filter-btn.active,
+    .filter-btn:hover {
+      border-color: transparent;
+      color: var(--accent);
+      box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.4);
+      background: rgba(59, 130, 246, 0.08);
+    }
+
+    .list-wrapper {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      gap: 16px;
+      max-height: min(480px, 60vh);
+      overflow-y: auto;
+      padding-right: 6px;
+    }
+
+    .task-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 18px 20px;
+      background: rgba(255, 255, 255, 0.92);
+      border-radius: 18px;
+      box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+      transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.3s ease;
+    }
+
+    .task-main {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      flex: 1;
+    }
+
+    .task-main input[type="checkbox"] {
+      margin-top: 3px;
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      accent-color: var(--accent);
+    }
+
+    .task-content {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .task-title {
+      font-size: 18px;
+      font-weight: 500;
+    }
+
+    .task-meta {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .task-card.completed {
+      opacity: 0.7;
+      background: rgba(226, 232, 240, 0.9);
+    }
+
+    .task-card.completed .task-title {
+      text-decoration: line-through;
+      color: rgba(30, 41, 59, 0.6);
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(59, 130, 246, 0.12);
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      border: none;
+      background: rgba(59, 130, 246, 0.08);
+      color: var(--accent);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.3s ease, transform 0.2s ease;
+    }
+
+    .icon-btn:hover {
+      background: rgba(59, 130, 246, 0.14);
+      transform: translateY(-1px);
+    }
+
+    .icon-btn:active {
+      transform: translateY(0);
+    }
+
+    .empty-state {
+      text-align: center;
+      color: var(--text-secondary);
+      padding: 60px 20px;
+      border: 2px dashed rgba(148, 163, 184, 0.35);
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.6);
+    }
+
+    .empty-state h3 {
+      font-size: 20px;
+      margin-bottom: 12px;
+    }
+
+    .empty-state p {
+      line-height: 1.6;
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 24px 12px;
+      }
+
+      .app-shell {
+        border-radius: 18px;
+      }
+
+      .task-card {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .actions {
+        align-self: flex-end;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app-shell" aria-labelledby="app-title">
+    <header>
+      <div class="title" id="app-title">
+        <span>✓</span>
+        清新待办清单
+      </div>
+      <p class="subtitle">在柔和的光影里安排每一件小事，轻松掌控生活节奏。</p>
+    </header>
+
+    <section class="input-area" aria-label="添加任务">
+      <div class="input-row">
+        <input type="text" id="task-input" placeholder="输入新的待办事项，例如：安排周末野餐" aria-label="待办内容">
+        <input type="text" id="tag-input" placeholder="添加标签，例如：生活 / 工作" aria-label="待办标签">
+        <button id="add-task">添加</button>
+      </div>
+      <div class="filters" role="radiogroup" aria-label="过滤任务">
+        <button class="filter-btn active" data-filter="all" aria-pressed="true">全部</button>
+        <button class="filter-btn" data-filter="active" aria-pressed="false">进行中</button>
+        <button class="filter-btn" data-filter="completed" aria-pressed="false">已完成</button>
+        <button class="filter-btn" data-filter="today" aria-pressed="false">今日精选</button>
+      </div>
+    </section>
+
+    <section class="list-wrapper" id="task-list" aria-live="polite">
+      <div class="empty-state">
+        <h3>今天想做些什么？</h3>
+        <p>输入待办事项并点击“添加”，清单将陪你完成每一个闪光的瞬间。</p>
+      </div>
+    </section>
+  </main>
+
+  <template id="task-template">
+    <article class="task-card" data-id="">
+      <div class="task-main">
+        <input type="checkbox" aria-label="标记完成">
+        <div class="task-content">
+          <h2 class="task-title"></h2>
+          <div class="task-meta"></div>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="icon-btn edit-btn" aria-label="编辑待办" title="编辑">✎</button>
+        <button class="icon-btn delete-btn" aria-label="删除待办" title="删除">✕</button>
+      </div>
+    </article>
+  </template>
+
+  <script>
+    const storageKey = 'serene-todo-list';
+    const taskInput = document.querySelector('#task-input');
+    const tagInput = document.querySelector('#tag-input');
+    const addTaskBtn = document.querySelector('#add-task');
+    const listWrapper = document.querySelector('#task-list');
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    const taskTemplate = document.querySelector('#task-template');
+
+    let tasks = loadTasks();
+    let activeFilter = 'all';
+
+    render();
+
+    addTaskBtn.addEventListener('click', handleAddTask);
+    taskInput.addEventListener('keyup', event => {
+      if (event.key === 'Enter') {
+        handleAddTask();
+      }
+    });
+
+    filterButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterButtons.forEach(b => b.classList.remove('active'));
+        filterButtons.forEach(b => b.setAttribute('aria-pressed', 'false'));
+        btn.classList.add('active');
+        btn.setAttribute('aria-pressed', 'true');
+        activeFilter = btn.dataset.filter;
+        render();
+      });
+    });
+
+    function handleAddTask() {
+      const title = taskInput.value.trim();
+      const tag = tagInput.value.trim();
+      if (!title) {
+        animateShake(taskInput);
+        return;
+      }
+
+      const newTask = {
+        id: crypto.randomUUID(),
+        title,
+        tag,
+        completed: false,
+        createdAt: new Date().toISOString(),
+      };
+
+      tasks.unshift(newTask);
+      saveTasks();
+      render();
+
+      taskInput.value = '';
+      tagInput.value = '';
+      taskInput.focus();
+    }
+
+    function render() {
+      const filtered = filterTasks();
+      listWrapper.innerHTML = '';
+
+      if (!filtered.length) {
+        listWrapper.appendChild(createEmptyState());
+        return;
+      }
+
+      filtered.forEach(task => {
+        const card = taskTemplate.content.firstElementChild.cloneNode(true);
+        card.dataset.id = task.id;
+        const checkbox = card.querySelector('input[type="checkbox"]');
+        const titleEl = card.querySelector('.task-title');
+        const metaEl = card.querySelector('.task-meta');
+        const editBtn = card.querySelector('.edit-btn');
+        const deleteBtn = card.querySelector('.delete-btn');
+
+        titleEl.textContent = task.title;
+        checkbox.checked = task.completed;
+        metaEl.textContent = formatMeta(task);
+        card.classList.toggle('completed', task.completed);
+
+        if (task.tag) {
+          const tagEl = document.createElement('span');
+          tagEl.className = 'tag';
+          tagEl.innerHTML = `#${task.tag}`;
+          metaEl.appendChild(tagEl);
+        }
+
+        checkbox.addEventListener('change', () => toggleTask(task.id, checkbox.checked));
+        editBtn.addEventListener('click', () => editTask(task.id));
+        deleteBtn.addEventListener('click', () => deleteTask(task.id));
+
+        listWrapper.appendChild(card);
+      });
+    }
+
+    function filterTasks() {
+      const today = new Date().toDateString();
+      switch (activeFilter) {
+        case 'active':
+          return tasks.filter(task => !task.completed);
+        case 'completed':
+          return tasks.filter(task => task.completed);
+        case 'today':
+          return tasks.filter(task => new Date(task.createdAt).toDateString() === today);
+        default:
+          return tasks;
+      }
+    }
+
+    function toggleTask(id, completed) {
+      tasks = tasks.map(task => task.id === id ? { ...task, completed } : task);
+      saveTasks();
+      render();
+    }
+
+    function editTask(id) {
+      const task = tasks.find(t => t.id === id);
+      if (!task) return;
+
+      const newTitle = prompt('更新待办内容', task.title);
+      if (newTitle === null) return;
+      const trimmed = newTitle.trim();
+      if (!trimmed) {
+        alert('内容不能为空');
+        return;
+      }
+
+      const newTag = prompt('更新标签 (可留空)', task.tag || '');
+      tasks = tasks.map(t => t.id === id ? { ...t, title: trimmed, tag: newTag.trim() } : t);
+      saveTasks();
+      render();
+    }
+
+    function deleteTask(id) {
+      const card = listWrapper.querySelector(`[data-id="${id}"]`);
+      if (card) {
+        card.style.transform = 'translateX(16px)';
+        card.style.opacity = '0';
+        setTimeout(() => {
+          tasks = tasks.filter(task => task.id !== id);
+          saveTasks();
+          render();
+        }, 200);
+      } else {
+        tasks = tasks.filter(task => task.id !== id);
+        saveTasks();
+        render();
+      }
+    }
+
+    function createEmptyState() {
+      const container = document.createElement('div');
+      container.className = 'empty-state';
+      container.innerHTML = `
+        <h3>没有符合条件的任务</h3>
+        <p>试着调整筛选条件，或添加一个新的灵感。</p>
+      `;
+      return container;
+    }
+
+    function formatMeta(task) {
+      const created = new Date(task.createdAt);
+      const dateText = created.toLocaleDateString('zh-CN', {
+        month: 'long',
+        day: 'numeric'
+      });
+      const timeText = created.toLocaleTimeString('zh-CN', {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      return `创建于 ${dateText} ${timeText} `;
+    }
+
+    function saveTasks() {
+      localStorage.setItem(storageKey, JSON.stringify(tasks));
+    }
+
+    function loadTasks() {
+      try {
+        const data = localStorage.getItem(storageKey);
+        if (!data) return [];
+        const parsed = JSON.parse(data);
+        if (!Array.isArray(parsed)) return [];
+        return parsed.map(task => ({
+          ...task,
+          createdAt: task.createdAt || new Date().toISOString(),
+        }));
+      } catch (error) {
+        console.warn('无法读取本地数据:', error);
+        return [];
+      }
+    }
+
+    function animateShake(element) {
+      element.style.animation = 'shake 0.3s';
+      element.addEventListener('animationend', () => {
+        element.style.animation = '';
+      }, { once: true });
+    }
+
+    const styleSheet = document.createElement('style');
+    styleSheet.textContent = `
+      @keyframes shake {
+        10%, 90% { transform: translateX(-1px); }
+        20%, 80% { transform: translateX(2px); }
+        30%, 50%, 70% { transform: translateX(-4px); }
+        40%, 60% { transform: translateX(4px); }
+      }
+    `;
+    document.head.appendChild(styleSheet);
+  </script>
+</body>
+</html>
